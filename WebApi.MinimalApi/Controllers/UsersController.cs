@@ -31,8 +31,36 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] object user)
+    [Produces("application/json", "application/xml")]
+    public IActionResult CreateUser([FromBody] CreateUserDto user)
     {
-        throw new NotImplementedException();
+        // Проверка на null (когда пришел пустой или некорректный контент)
+        if (user == null)
+        {
+            return BadRequest();
+        }
+
+        // Проверка, что логин состоит только из букв и цифр
+        if (user.Login != null && !user.Login.All(char.IsLetterOrDigit))
+        {
+            ModelState.AddModelError("Login", "Login should contain only letters or digits");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return UnprocessableEntity(ModelState);
+        }
+
+        // Создаем UserEntity из DTO с помощью AutoMapper
+        var userEntity = mapper.Map<UserEntity>(user);
+        
+        // Вставляем в репозиторий (ID будет назначен автоматически)
+        var createdUserEntity = userRepository.Insert(userEntity);
+        
+        // Возвращаем ID созданного пользователя
+        return CreatedAtRoute(
+            nameof(GetUserById),
+            new { userId = createdUserEntity.Id },
+            createdUserEntity.Id);
     }
 }
