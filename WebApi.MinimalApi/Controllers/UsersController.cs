@@ -144,4 +144,23 @@ public class UsersController : Controller
 
         return NoContent();
     }
+
+    [HttpDelete("{userId}")]
+    public IActionResult DeleteUser([FromRoute] string userId)
+    {
+        if (!Guid.TryParse(userId, out var userGuid))
+        {
+            return NotFound();
+        }
+
+        var existingUser = userRepository.FindById(userGuid);
+        if (existingUser == null)
+        {
+            return NotFound();
+        }
+
+        userRepository.Delete(userGuid);
+
+        return NoContent();
+    }
 }
